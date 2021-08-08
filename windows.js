@@ -150,7 +150,7 @@
         }
     });
     // stop resizing and reposition
-    window.addEventListener('mouseup', function(ev) {
+    window.addEventListener('mouseup', function() {
         if (window.windowsStorage.dragMode) {
             if (window.windowsStorage.setFull) {
                 focusedWindow.switchFullScreen(true);
