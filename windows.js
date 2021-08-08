@@ -3,12 +3,12 @@
 // WARN: global window.focusedWindow and window.windowsStorage are used by this script, please, do not change this variables manually
 
 (function() {
-    // you can change theme
-    theme = {
-        background: '#2c2c2c',
-        color: '#fff',
-        focusedZIndex: 999,
-        backgroundZIndex: 998
+    // you can change config
+    config = {
+        background: '#2c2c2c', // changes window background color
+        color: '#fff', // changes window text color (can't change theme in apps)
+        focusedZIndex: 999, // z-index of forwarded window
+        backgroundZIndex: 998 // z-index of windows in background
     }
 
     // don't change next parts...
@@ -113,11 +113,10 @@
                 }
                 if (window.windowsStorage.inBorder !== isInBorder) {
                     if (window.windowsStorage.inBorder === false && isInBorder === true) {
-                        window.windowsStorage.originalCursor = document.body.style.cursor + '';
                         document.body.style.cursor = inBorderSides ? 'w-resize' : 'n-resize';
                     }
                     if (window.windowsStorage.inBorder === true && isInBorder === false) {
-                        document.body.style.cursor = window.windowsStorage.originalCursor + '' || 'default';
+                        document.body.style.cursor = 'default';
                     }
                     window.windowsStorage.inBorder = isInBorder;
                 }
@@ -130,11 +129,12 @@
             window.windowsStorage.dragMode = 'resize';
             ev.preventDefault();
             ev.stopPropagation();
-        } else if (focusedWindow) {
+        } else {
             // check if is in controls container range, set needed variables and start reposition
             let controlsMasterOfDeath = ev.target.closest('.controls-container'),
                 appWindow = ev.target.closest('app-window');
             if (ev.target.tagName !== 'SVG' && controlsMasterOfDeath) {
+                appWindow.focus();
                 window.windowsStorage.dragMode = 'reposition';
                 window.windowsStorage.dragX = ev.clientX - appWindow.offsetLeft;
                 window.windowsStorage.dragY = ev.clientY - appWindow.offsetTop;
@@ -151,6 +151,7 @@
                 focusedWindow.switchFullScreen(true);
             }
             delete window.windowsStorage.dragMode;
+            window.windowsStorage.inBorder = false;
         }
     });
 
@@ -161,7 +162,7 @@
         return div.firstChild;
     }
     // icons
-    function icon(name, color = theme.color, size = 24) {
+    function icon(name, color = config.color, size = 24) {
         // https://fonts.google.com/icons
         let svgCode = `<svg xmlns="http://www.w3.org/2000/svg" height="${size}px" viewBox="0 0 ${size} ${size}" width="${size}px" fill="${color}">`;
         switch(name) {
@@ -187,6 +188,7 @@
         lockNostoreSize = false;
         title = 'Loading...';
         logs = false;
+        closeCallbacks = [];
         // we can add logs to our window
         log(data){
             if (this.logs) {
@@ -195,9 +197,9 @@
         }
         // update window
         updateView() {
-            // set window theme
-            this.style.color = theme.color;
-            this.style.backgroundColor = theme.background;
+            // set window config
+            this.style.color = config.color;
+            this.style.backgroundColor = config.background;
             // get position from attributes if is set
             if (this.hasAttribute('position')) {
                 let pos = this.getAttribute('position').split(',');
@@ -238,23 +240,32 @@
             this.querySelector('.controls-container span.title').innerText = this.title;
         }
         // load app as object to window, remember about CORS
+        // you can also load another app to same window
         loadShadowApp(url) {
-            // create shadow root, style for app object and app object
-            let shadowRoot = this.querySelector('div.content-container').attachShadow({mode: 'open'}),
-                appObject = document.createElement('OBJECT'),
-                appStyle = document.createElement('STYLE');
-            appStyle.innerHTML = `:host{padding:0;margin:0;background:transparent} object{position:relative;top:0;left:0;width:100%;height:100%}`;
-            appObject.setAttribute('data', url);
-            // add this to window
-            shadowRoot.appendChild(appStyle);
-            shadowRoot.appendChild(appObject);
-            this.log(`Loaded shadow app ${url}`);
+            let contentContainer = this.querySelector('div.content-container');
+            if (contentContainer.shadowRoot){
+                // change app object url inside shadow root
+                contentContainer.shadowRoot.querySelector('object').setAttribute('data', url);
+                this.log(`Changed and loaded app [${url}]`);
+            } else {
+                // create shadow root, style for app object and app object
+                let shadowRoot = contentContainer.attachShadow({mode: 'open'}),
+                    appObject = document.createElement('OBJECT'),
+                    appStyle = document.createElement('STYLE');
+                appStyle.innerHTML = `:host{padding:0;margin:0;background:transparent} object{position:relative;top:0;left:0;width:100%;height:100%}`;
+                appObject.setAttribute('data', url);
+                // add this to window
+                shadowRoot.appendChild(appStyle);
+                shadowRoot.appendChild(appObject);
+                this.log(`Loaded shadow app [${url}]`);
+            }
         }
         // setting window title
         setTitle(str) {
             this.title = str;
             // setting title (visible for users)
             this.querySelector('.controls-container span.title').innerText = this.title;
+            this.log(`Changed title to [${str}]`);
         }
         // resizing without remembering changes
         resizeNostore(x, y) {
@@ -302,6 +313,7 @@
                 this.toggleAttribute('fullscreen');
             }
             this.updateView();
+            this.log('Changed fullscreen to ' + this.isFullScreen);
         }
         // switch window display true/false/null=toggle
         switchShow(val) {
@@ -319,15 +331,31 @@
             }
             this.updateView();
         }
+        // focus window, move to front
         focus() {
             if (window.focusedWindow) {
-                window.focusedWindow.style.zIndex = theme.backgroundZIndex;
+                window.focusedWindow.style.zIndex = config.backgroundZIndex;
             }
-            this.style.zIndex = theme.focusedZIndex;
+            this.style.zIndex = config.focusedZIndex;
             window.focusedWindow = this;
+        }
+        // allow to add close callbacks
+        addCloseCallback(func) {
+            this.closeCallbacks.push(func);
+            this.log('Added close callback ' + String(func).substr(0, 30));
+        }
+        // allow to remove close callbacks
+        removeCloseCallback(func) {
+            let index = this.closeCallbacks.indexOf(func);
+            if (index === -1) return;
+            this.closeCallbacks.splice(index, 1);
+            this.log('Removed close callback ' + String(func).substr(0, 30));
         }
         constructor() {
             super();
+        }
+        disconnectedCallback() {
+            for (let callback of this.closeCallbacks) callback();
         }
         connectedCallback() {
             // wait for content parse and load
