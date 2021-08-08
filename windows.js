@@ -29,13 +29,9 @@
 
     // Window focus
     window.addEventListener('click', function(ev) {
-        if (window.focusedWindow) {
-            window.focusedWindow.style.zIndex = theme.backgroundZIndex;
-        }
         let focusWindow = ev.target.closest('app-window');
         if (focusWindow) {
-            focusWindow.style.zIndex = theme.focusedZIndex;
-            window.focusedWindow = focusWindow;
+            focusWindow.focus();
         }
     });
 
@@ -106,8 +102,8 @@
                 }
                 /* box
                 * |--X--|
-                * X ### 2
-                * |--3--|
+                * X ### 1
+                * |--2--|
                 * */
                 let inBorderSides = inRange(ev, corners.rightBottom.x - 12, corners.leftUp.y, corners.rightBottom.x, corners.rightBottom.y),
                     inBorderBottom = inRange(ev, corners.leftUp.x, corners.rightBottom.y - 14, corners.rightBottom.x, corners.rightBottom.y + 2),
@@ -119,7 +115,6 @@
                     if (window.windowsStorage.inBorder === false && isInBorder === true) {
                         window.windowsStorage.originalCursor = document.body.style.cursor + '';
                         document.body.style.cursor = inBorderSides ? 'w-resize' : 'n-resize';
-
                     }
                     if (window.windowsStorage.inBorder === true && isInBorder === false) {
                         document.body.style.cursor = window.windowsStorage.originalCursor + '' || 'default';
@@ -324,6 +319,13 @@
             }
             this.updateView();
         }
+        focus() {
+            if (window.focusedWindow) {
+                window.focusedWindow.style.zIndex = theme.backgroundZIndex;
+            }
+            this.style.zIndex = theme.focusedZIndex;
+            window.focusedWindow = this;
+        }
         constructor() {
             super();
         }
@@ -363,7 +365,7 @@
                         ic = icon('close');
                         ic.addEventListener('click', () => {
                             this.closeWindow();
-                        })
+                        });
                     }
                     if (ic) {
                         controlsDiv.appendChild(ic);
