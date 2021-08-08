@@ -6,7 +6,9 @@
     // you can change theme
     theme = {
         background: '#2c2c2c',
-        color: '#fff'
+        color: '#fff',
+        focusedZIndex: 999,
+        backgroundZIndex: 998
     }
 
     // don't change next parts...
@@ -27,8 +29,12 @@
 
     // Window focus
     window.addEventListener('click', function(ev) {
+        if (window.focusedWindow) {
+            window.focusedWindow.style.zIndex = theme.backgroundZIndex;
+        }
         let focusWindow = ev.target.closest('app-window');
         if (focusWindow) {
+            focusWindow.style.zIndex = theme.focusedZIndex;
             window.focusedWindow = focusWindow;
         }
     });
@@ -395,8 +401,24 @@
         });
     }
     // windows style
-    let style = `
-`;
+    let style = `app-window {all: unset;position: fixed;box-sizing: border-box;border: solid 1px rgba(255, 255, 255, .4);overflow: hidden;}
+app-window.show .nofullscreen{display: inline-block}
+app-window.show .fullscreen{display: none}
+app-window.show[fullscreen] .nofullscreen{display: none}
+app-window.show[fullscreen] .fullscreen{display: inline-block}
+app-window {display: none}
+app-window.show {display: block}
+app-window .controls-container {position: relative;width: 100%;height: .8cm;cursor: move;}
+app-window .controls-container .title {float: left;font-family: Roboto, Lato, Arial, "Open Sans";max-width: calc(100% - 2.8cm - 2px);max-height: .8cm;overflow: hidden;white-space: nowrap;text-overflow: ellipsis;padding: .2cm;font-size: .4cm;cursor: move;}
+app-window.show[fullscreen] .controls-container, app-window.show[fullscreen] .controls-container .title {cursor: default}
+app-window .controls-container .controls {float: right}
+app-window .controls-container .controls svg {width: .8cm;height: .8cm;background-color: rgba(255, 255, 255, 0);cursor: pointer;transition: background-color .4s ease-in-out;}
+app-window .controls-container .controls svg:hover {background-color: rgba(255, 255, 255, .16)}
+app-window .content-container {box-sizing: border-box;width: 100%;height: 100%;padding: .3cm;max-height: calc(100% - .8cm - 1px);overflow: auto;}
+app-window .content-container::-webkit-scrollbar {width: .8em}
+app-window .content-container::-webkit-scrollbar-track {border-radius: 0;background-color: rgba(255, 255, 255, .04)}
+app-window .content-container::-webkit-scrollbar-thumb {background: rgba(255, 255, 255, .08);border-radius: 0}
+app-window .content-container::-webkit-scrollbar-thumb:hover {background: rgba(255, 255, 255, .16)}`;
     // append windows style to body when body was loaded
     let styleElement = document.createElement('style');
     styleElement.setAttribute('name', 'window-element-style');
