@@ -8,10 +8,10 @@ Theres 2 window properties used by this library:
 
 ## Using windows component
 ```html
-<app-window title="Test window" controls="MFSX" position="30,20" size="500,300" logs="true" appUrl="app.html" class="show" fullscreen></app-window>
+<app-window winTitle="Test window" controls="MFSX" position="30,20" size="500,300" logs="true" appUrl="app.html" class="show" fullscreen></app-window>
 ```
 ### Attributes
-***title*** - set window title<br>
+***winTitle*** - set window title<br>
 ***controls*** - set windows controls<br>
 
 <ul>
@@ -30,7 +30,7 @@ You can change buttons combination, remove or even multiply buttons.
 ***fullscreen*** -make window fullscreen<br>
 ## Control window element with javascript
 ```html
-<app-window id="example-window" title="Example" controls="MFSX"></app-window>
+<app-window id="example-window" winTitle="Example" controls="MFSX"></app-window>
 ```
 ```javascript
 windowElement = document.getElementById("example-window");

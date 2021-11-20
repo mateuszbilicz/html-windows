@@ -211,8 +211,8 @@
                 this.size = {x: siz[0] * 1, y: siz[1] * 1};
             }
             // get title from attributes if is set
-            if (this.hasAttribute('title')) {
-                this.title = this.getAttribute('title');
+            if (this.hasAttribute('winTitle')) {
+                this.title = this.getAttribute('winTitle');
             }
             // get logs option from attributes if is set
             if (this.hasAttribute('logs')) {
@@ -263,6 +263,7 @@
         // setting window title
         setTitle(str) {
             this.title = str;
+            this.setAttribute('winTitle', str);
             // setting title (visible for users)
             this.querySelector('.controls-container span.title').innerText = this.title;
             this.log(`Changed title to [${str}]`);
@@ -456,7 +457,7 @@ app-window .content-container::-webkit-scrollbar-thumb:hover {background: rgba(2
     if (window.body) {
         // this activates when you place script on body end
         window.body.appendChild(styleElement);
-        startObserver(window.body)
+        startObserver(window.body);
     } else {
         // this activates when you place script in head
         window.addEventListener('DOMContentLoaded', ev => {
